@@ -2,6 +2,7 @@ import functools
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 from myblog.db import get_db
+import sqlite3
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -23,9 +24,9 @@ def register():
                 db.execute(
                     "INSERT INTO user (username, password) VALUES (?, ?)",
                     (username, generate_password_hash(password)),
-                )
+                )   
                 db.commit()
-            except db.IntegrityError:
+            except sqlite3.IntegrityError:
                 error = f"User {username} is already registered."
             else:
                 return redirect(url_for("auth.login"))
