@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+
+
+{% block content %}
+    <header>
+        <h1>{{ post['title'] }}</h1>
+        <div class="about">by {{ post['username'] }} on {{ post['created'].strftime('%Y-%m-%d') }}</div>
+    </header>
+    <main class="post">
+        <article class="post-text">
+            {{ post['body'] }}
+        </article>
+        <aside class="comment-section">
+            <div class="post-comment">
+                <form method="post" id="message-form" data-post-id="{{ post['id'] }}">
+                    <label for="body">Your comment:</label>
+                    <input type="text" id="user-message" name="user-message"
+                     placeholder="Type your message here">
+                    <!-- <button onclick="sendMessage()" class="send-message">Send</button> -->
+                    <input type="submit" value="Send message" class="send-message">
+                </form>
+            </div>
+
+            <h2>Comments</h2>
+            <div id="chat-messages">
+                {% for comment in comments %}
+                    <div class="comment">
+                        <p class="comment-body">{{ comment['body'] }}</p>
+                        <p class="comment-meta">Posted by {{ comment['username'] }} on {{ comment['created'].strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </aside>
+    </main>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', filename='comment_section.js') }}"></script>
+{% endblock %}

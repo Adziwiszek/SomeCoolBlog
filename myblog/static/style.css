@@ -133,3 +133,32 @@ input[type=submit] {
     min-width: 10em;     
 }
 
+header.about {
+    color: slategray; 
+    font-style: italic;     
+}
+
+article {
+    margin: 1em;
+}
+
+aside.comment-section {
+    border: 1px solid;
+}
+
+.post-comment {
+    margin: 1em 1em;
+}
+
+button.send-message {
+    max-width: 20em;
+}
+
+.comment {
+    border: 1px solid darkgrey;
+    margin: 0.5em;
+}
+
+.comment-meta {
+    color: #377ba8;
+}

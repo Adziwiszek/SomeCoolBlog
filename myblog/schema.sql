@@ -15,3 +15,14 @@ CREATE TABLE post (
   body TEXT NOT NULL,
   FOREIGN KEY (author_id) REFERENCES user (id)
 );
+
+CREATE TABLE comment (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER NOT NULL,
+  author_id INTEGER NOT NULL,
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  body TEXT NOT NULL,
+  FOREIGN KEY (post_id) REFERENCES post (id),
+  FOREIGN KEY (author_id) REFERENCES user (id)
+  -- in future add update time/status, things for moderation, chain comments
+);

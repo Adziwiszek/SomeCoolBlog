@@ -1,7 +1,11 @@
 <!doctype html>
+<html>
 <head>
   <title>{% block title %}{% endblock %} - MyBlog</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">  
+  <!-- <link rel="text/javascript" href="{{ url_for('static', filename='comment_section.js') }}">   -->
+  <!-- <script src="{{ url_for('static', filename='comment_section.js') }}" defer></script> -->
+  {% block scripts %}{% endblock %}
 </head>
 
 <body>
@@ -27,3 +31,4 @@
     {% block content %}{% endblock %}
   </section>
 </body>
+</html>
