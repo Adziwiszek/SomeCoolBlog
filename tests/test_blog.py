@@ -90,8 +90,26 @@ def test_delete(client, auth, app):
         post = db.execute('SELECT * FROM post WHERE id = 1').fetchone()
         assert post is None
 
+def test_receive_message(client, auth, app):
+    '''Test for reciving (from server) comments on a post'''
+    # Try to read comments, when there are none
+    response = client.get('/1/receive', content_type='application/json')
+    data_response = json.loads(response.data)
+    assert data_response['status'] == 'success'
+    print(f'{data_response}')
+    assert data_response['message'] == 'no comments found'
 
-def test_comment(client, auth, app):
+    # Send a comment and check if we can get it
+    auth.login()
+    client.post('/send', 
+                data=json.dumps({'message': 'dupa', 'postID': 1}),
+                content_type='application/json')
+    response = client.get('/1/receive', content_type='application/json')
+    data_response = json.loads(response.data)
+    assert data_response['status'] == 'success'
+    assert data_response['message'] == 'comments found'
+
+def test_send_message(client, auth, app):
     '''Tests commenting on a post'''
     auth.login()
 
@@ -104,7 +122,7 @@ def test_comment(client, auth, app):
         db = get_db()
         count = db.execute('SELECT COUNT(id) FROM comment'
                            ' WHERE post_id = 1').fetchone()[0]
-        assert count == 2
+        assert count == 1
 
 
 def test_vote_correctly(client, auth, app):

@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function refreshComments() {
         const postID = form.getAttribute('data-post-id');
         fetch('/'+postID+'/receive', {
-            method: 'POST',
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             },
