@@ -100,25 +100,3 @@ document.addEventListener('DOMContentLoaded', function() {
         if (parts.length === 2) return parts.pop().split(';').shift();
     }
 });
-
-// Function to receive and display messages
-function receiveMessage() {
-    fetch('/receive', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            message: 'Placeholder message'  // Send a placeholder message for demonstration purposes
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Display the received message in the chat-box
-        const chatMessages = document.getElementById('chat-messages');
-        chatMessages.innerHTML += `<p>${data.message}</p>`;
-    });
-
-    //setInterval(receiveMessage, 5000); // Fetch new messages every 5 seconds
-}
-// Periodically check for new messages (for demonstration purposes)

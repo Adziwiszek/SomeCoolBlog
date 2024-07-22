@@ -13,7 +13,7 @@ bp = Blueprint('blog', __name__)
 def index():
     db = get_db()
     posts = db.execute(
-        'SELECT p.id, title, body, created, author_id, username'
+        'SELECT p.id, title, body, created, author_id, username, upvotes, downvotes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
         ' ORDER BY created DESC'
     ).fetchall()
@@ -184,6 +184,44 @@ def send_message():
         
     return jsonify({'status': 'failure'})
 
+@bp.route('/<int:id>/<int:action>/vote', methods=('POST',))
+def vote(id, action):
+    if action == 1: 
+        db = get_db()
+        cur = db.cursor()
+        cur.execute(
+            'SELECT upvotes FROM post'
+            ' WHERE id = ?',
+            (id,)
+        )
+        result = cur.fetchone()
+        print(result['upvotes'])
+        cur.execute(
+            'UPDATE post SET upvotes = ?'
+            ' WHERE id = ?',
+            (result['upvotes'] + 1, id)
+        )
+        db.commit()
+        return jsonify({'status': 'success',
+                        'votes': result['upvotes'] + 1})    
+    elif action == 0: 
+        db = get_db()
+        cur = db.cursor()
+        cur.execute(
+            'SELECT downvotes FROM post'
+            ' WHERE id = ?',
+            (id,)
+        )
+        result = cur.fetchone()
+        cur.execute(
+            'UPDATE post SET downvotes = ?'
+            ' WHERE id = ?',
+            (result['downvotes'] + 1, id)
+        )
+        db.commit()
+        return jsonify({'status': 'success',
+                        'votes': result['downvotes'] + 1}) 
+    return jsonify({'status': 'failure'})
 
 # Make sure to set a secret key for your app
 # app.config['SECRET_KEY'] = 'your-secret-key'  # Change this to a secure random key

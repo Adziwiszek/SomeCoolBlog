@@ -91,6 +91,28 @@ nav ul li a, nav ul li span, header .action {
     margin-bottom: 0;     
 }
 
+.post .voting {
+    text-align: center;
+    align-self: center;
+    width: 10%;
+}
+
+.upvote {
+    background-color: lightgreen;
+    margin: 0.5em;
+}
+.upvote:hover {
+    background-color: rgb(61, 186, 61);
+}
+
+.downvote {
+    background-color: lightcoral;
+    margin: 0.5em;
+}
+.downvote:hover {
+    background-color: rgb(207, 77, 77);
+}
+
 .post .about { 
     color: slategray; 
     font-style: italic;     
