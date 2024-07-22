@@ -125,6 +125,7 @@ def delete(id):
     db.commit()
     return redirect(url_for('blog.index'))
 
+
 @bp.route('/<int:id>/read', methods=('GET', 'POST'))
 def read(id):
     post = get_post(id, False)
@@ -135,12 +136,14 @@ def read(id):
     ).fetchall()
     return render_template('blog/read.html', post=post  , comments=comments)
 
+
 @bp.route('/<int:id>/receive', methods=('POST', 'GET'))
 def receive_message(id):
     comments = get_posts_comments(id)
     return comments
 
-@bp.route('/send', methods=['POST'])
+
+@bp.route('/send', methods=('POST',))
 @login_required
 def send_message():
     if request.method == 'POST':
@@ -148,39 +151,39 @@ def send_message():
 
         message = data['message']
         postID = data['postID']
-        error = None
 
-        if not message:
-            error = 'Message is required.'
+        if not message: 
+            return jsonify({'status': 'error',
+                            'message': 'message is required.'})
+        if not postID: 
+            return jsonify({'status': 'error',
+                            'message': 'postID is required.'})
 
-        if error is not None:
-            flash(error)
-        else:
-            db = get_db()
-            cur = db.cursor()
-            cur.execute(
-                'INSERT INTO comment (post_id, author_id, body)'
-                ' VALUES (?, ?, ?)',
-                (postID, g.user['id'], message)
-            )
-            db.commit()
+        db = get_db()
+        cur = db.cursor()
+        cur.execute(
+            'INSERT INTO comment (post_id, author_id, body)'
+            ' VALUES (?, ?, ?)',
+            (postID, g.user['id'], message)
+        )
+        db.commit()
 
-            # fetch the newly inserted comment
-            cur.execute(
-                'SELECT c.id, c.body, c.created, u.username FROM comment c JOIN user u ON c.author_id = u.id WHERE c.id = ?',
-                (cur.lastrowid,)
-            )
-            new_comment = cur.fetchone()
-            response = jsonify({
-                'status': 'success',
-                'comment': {
-                    'id': new_comment['id'],
-                    'body': new_comment['body'],
-                    'created': new_comment['created'].strftime('%Y-%m-%d %H:%M:%S'),
-                    'username': new_comment['username']
-                }
-            })
-            return response
+        # fetch the newly inserted comment
+        cur.execute(
+            'SELECT c.id, c.body, c.created, u.username FROM comment c JOIN user u ON c.author_id = u.id WHERE c.id = ?',
+            (cur.lastrowid,)
+        )
+        new_comment = cur.fetchone()
+        response = jsonify({
+            'status': 'success',
+            'comment': {
+                'id': new_comment['id'],
+                'body': new_comment['body'],
+                'created': new_comment['created'].strftime('%Y-%m-%d %H:%M:%S'),
+                'username': new_comment['username']
+            }
+        })
+        return response
         
     return jsonify({'status': 'failure'})
 

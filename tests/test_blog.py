@@ -91,7 +91,23 @@ def test_delete(client, auth, app):
         assert post is None
 
 
-def test_vote_correct(client, auth, app):
+def test_comment(client, auth, app):
+    '''Tests commenting on a post'''
+    auth.login()
+
+    response = client.post('/send', 
+                           data=json.dumps({'message': 'dupa', 'postID': 1}),
+                           content_type='application/json')
+    data_response = json.loads(response.data)
+    assert 'comment' in data_response
+    with app.app_context():
+        db = get_db()
+        count = db.execute('SELECT COUNT(id) FROM comment'
+                           ' WHERE post_id = 1').fetchone()[0]
+        assert count == 2
+
+
+def test_vote_correctly(client, auth, app):
     '''Tests voting on a post witch exists, with correct action 
     (1 for upvoting and 0 for downvoting).'''
     auth.login()
