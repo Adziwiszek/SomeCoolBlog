@@ -112,7 +112,7 @@ def test_vote_correct(client, auth, app):
         assert ('votes' in data_downv) and ('status' in data_downv)
         # check if json returned by request has correct number of votes
         assert data_upv['votes'] == upvotes_before + 1
-        assert data_downv['votes'] == upvotes_before + 1
+        assert data_downv['votes'] == downvotes_before + 1
 
         # check if database was updated
         upvotes_after = cur.execute('SELECT upvotes FROM post WHERE id = 1').fetchone()[0]
