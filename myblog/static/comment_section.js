@@ -26,8 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data);
+            // console.log(data);
             if (data.status === 'success') {
+                // TODO: add instant displaying your messages
                 // Add the message to the chat
                 // const messageElement = document.createElement('div');
                 // messageElement.textContent = userMessage;
@@ -58,10 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                // message: 'Placeholder message'  // Send a placeholder message for demonstration purposes
-            })
+            }
         })
         .then(response => response.json())
         .then(data => {

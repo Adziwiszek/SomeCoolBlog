@@ -187,55 +187,123 @@ def send_message():
 
 @bp.route('/<int:id>/downvote', methods=('POST',))
 def downvote(id):
-    db = get_db()
-    cur = db.cursor()
-    cur.execute(
-        'SELECT downvotes FROM post'
-        ' WHERE id = ?',
-        (id,)
-    )
-    result = cur.fetchone()
+    try:
+        db = get_db()
+        cur = db.cursor()
+        cur.execute(
+            'SELECT downvotes FROM post'
+            ' WHERE id = ?',
+            (id,)
+        )
+        result = cur.fetchone()
 
-    if result is None:
-        return jsonify({'status': 'failure',
-                    'votes': -1})
-    
-    cur.execute(
-        'UPDATE post SET downvotes = ?'
-        ' WHERE id = ?',
-        (result['downvotes'] + 1, id)
-    )
-    db.commit()
+        if result is None:
+            return jsonify({'status': 'failure',
+                        'votes': -1})
+        
+        cur.execute(
+            'SELECT user_id FROM user_votes'
+            ' WHERE post_id = ? AND user_id = ? AND vote = FALSE',
+            (id, g.user['id'])
+        )
+        downvoted = cur.fetchone()
+        # User already upvoted this post
+        if downvoted is not None:
+            cur.execute(
+                'DELETE FROM user_votes'
+                ' WHERE user_id = ? AND post_id = ? AND vote = FALSE',
+                (g.user['id'], id)
+            )
+            db.commit()
+            cur.execute(
+                'UPDATE post SET downvotes = ?'
+                ' WHERE id = ?',
+                (result['downvotes'] - 1, id)
+            )
+            db.commit()
 
-    return jsonify({'status': 'success',
-                    'votes': result['downvotes'] + 1}) 
-    
+            return jsonify({'status': 'success',
+                            'votes': result['downvotes'] - 1})
+        else:
+            cur.execute(
+                'UPDATE post SET downvotes = ?'
+                ' WHERE id = ?',
+                (result['downvotes'] + 1, id)
+            )
+            db.commit()
+
+            cur.execute(
+                'INSERT INTO user_votes (user_id, post_id, vote)'
+                ' VALUES (?, ?, FALSE)',
+                (g.user['id'], id)
+            )
+            db.commit()
+            return jsonify({'status': 'success',
+                            'votes': result['downvotes'] + 1}) 
+    except Exception as e:
+        # current_app.logger.error(f'Error in upvote route: {str(e)}')
+        db.rollback()
+        return jsonify({'status': 'error', 'message': 'An unexpected error occurred'}), 500
+
 
 @bp.route('/<int:id>/upvote', methods=('POST',))
 def upvote(id):
-    db = get_db()
-    cur = db.cursor()
-    cur.execute(
-        'SELECT upvotes FROM post'
-        ' WHERE id = ?',
-        (id,)
-    )
-    result = cur.fetchone()
+    try:
+        db = get_db()
+        cur = db.cursor()
+        cur.execute(
+            'SELECT upvotes FROM post'
+            ' WHERE id = ?',
+            (id,)
+        )
+        result = cur.fetchone()
 
-    if result is None:
-        return jsonify({'status': 'failure',
-                    'votes': -1})
+        if result is None:
+            return jsonify({'status': 'failure',
+                        'votes': -1})
+
+        cur.execute(
+            'SELECT user_id FROM user_votes'
+            ' WHERE post_id = ? AND user_id = ? AND vote = TRUE',
+            (id, g.user['id'])
+        )
+        upvoted = cur.fetchone()
+        print(f"{upvoted}")
+        # User already upvoted this post
+        if upvoted is not None:
+            cur.execute(
+                'DELETE FROM user_votes'
+                ' WHERE user_id = ? AND post_id = ? AND vote = TRUE',
+                (g.user['id'], id)
+            )
+            db.commit()
+            cur.execute(
+                'UPDATE post SET upvotes = ?'
+                ' WHERE id = ?',
+                (result['upvotes'] - 1, id)
+            )
+            db.commit()
+
+            return jsonify({'status': 'success',
+                            'votes': result['upvotes'] - 1})
+        else:
+            cur.execute(
+                'UPDATE post SET upvotes = ?'
+                ' WHERE id = ?',
+                (result['upvotes'] + 1, id)
+            )
+            db.commit()
+
+            cur.execute(
+                'INSERT INTO user_votes (user_id, post_id, vote)'
+                ' VALUES (?, ?, TRUE)',
+                (g.user['id'], id)
+            )
+            db.commit()
+            return jsonify({'status': 'success',
+                            'votes': result['upvotes'] + 1})    
+    except Exception as e:
+        # current_app.logger.error(f'Error in upvote route: {str(e)}')
+        db.rollback()
+        return jsonify({'status': 'error', 'message': 'An unexpected error occurred'}), 500
     
-    cur.execute(
-        'UPDATE post SET upvotes = ?'
-        ' WHERE id = ?',
-        (result['upvotes'] + 1, id)
-    )
-    db.commit()
-
-    return jsonify({'status': 'success',
-                    'votes': result['upvotes'] + 1})    
-
-    
-# Make sure to set a secret key for your app
-# app.config['SECRET_KEY'] = 'your-secret-key'  # Change this to a secure random key

@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const downvoteDivs = document.querySelectorAll('[id=downvote]');
     
     function vote(post_id, action) {
-        fetch('/'+post_id+'/'+action+'/vote', {
+        fetch('/'+post_id+'/'+(action == 1? '/upvote' : '/downvote'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
