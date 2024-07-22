@@ -29,3 +29,9 @@ CREATE TABLE comment (
   FOREIGN KEY (author_id) REFERENCES user (id)
   -- in future add update time/status, things for moderation, chain comments
 );
+
+CREATE TABLE user_votes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  post_id INTEGER NOT NULL
+)

@@ -1,6 +1,6 @@
 import pytest
 from myblog.db import get_db
-
+import json
 
 def test_index(client, auth):
     response = client.get('/')
@@ -89,3 +89,34 @@ def test_delete(client, auth, app):
         db = get_db()
         post = db.execute('SELECT * FROM post WHERE id = 1').fetchone()
         assert post is None
+
+
+def test_vote_correct(client, auth, app):
+    '''Tests voting on a post witch exists, with correct action 
+    (1 for upvoting and 0 for downvoting).'''
+    auth.login()
+
+    with app.app_context():
+        db = get_db()
+        cur = db.cursor()
+        upvotes_before = cur.execute('SELECT upvotes FROM post WHERE id = 1').fetchone()[0]
+        downvotes_before = cur.execute('SELECT downvotes FROM post WHERE id = 1').fetchone()[0]
+
+        response_upv = client.post('/1/upvote')
+        response_downv = client.post('/1/downvote')
+        assert response_upv.status_code == 200
+
+        data_upv = json.loads(response_upv.data)
+        data_downv = json.loads(response_downv.data)
+        assert ('votes' in data_upv) and ('status' in data_upv)
+        assert ('votes' in data_downv) and ('status' in data_downv)
+        # check if json returned by request has correct number of votes
+        assert data_upv['votes'] == upvotes_before + 1
+        assert data_downv['votes'] == upvotes_before + 1
+
+        # check if database was updated
+        upvotes_after = cur.execute('SELECT upvotes FROM post WHERE id = 1').fetchone()[0]
+        downvotes_after = cur.execute('SELECT downvotes FROM post WHERE id = 1').fetchone()[0]
+        assert upvotes_after == upvotes_before + 1
+        assert downvotes_after == downvotes_before + 1
+

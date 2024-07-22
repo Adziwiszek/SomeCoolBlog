@@ -221,7 +221,9 @@ def vote(id, action):
         db.commit()
         return jsonify({'status': 'success',
                         'votes': result['downvotes'] + 1}) 
-    return jsonify({'status': 'failure'})
+    
+    return jsonify({'status': 'failure',
+                    'votes': -1})
 
 # Make sure to set a secret key for your app
 # app.config['SECRET_KEY'] = 'your-secret-key'  # Change this to a secure random key
