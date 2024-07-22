@@ -92,11 +92,13 @@ def test_delete(client, auth, app):
 
 def test_receive_message(client, auth, app):
     '''Test for reciving (from server) comments on a post'''
+    # TODO: maybe in future add tests for getting comments from post that
+    # doesn't exist (although right now it also works)
+    
     # Try to read comments, when there are none
     response = client.get('/1/receive', content_type='application/json')
     data_response = json.loads(response.data)
     assert data_response['status'] == 'success'
-    print(f'{data_response}')
     assert data_response['message'] == 'no comments found'
 
     # Send a comment and check if we can get it

@@ -69,7 +69,6 @@ def get_posts_comments(post_id):
         ' ORDER BY created DESC',
         (post_id,)
     ).fetchall()
-    print(f"comments {comments}")
     if comments is None or comments == []:
         return jsonify({'status': 'success',
                         'message': 'no comments found',
