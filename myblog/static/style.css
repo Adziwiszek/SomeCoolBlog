@@ -91,7 +91,9 @@ nav ul li a, nav ul li span, header .action {
     margin-bottom: 0;     
 }
 
-.post .voting {
+.voting {
+    display: flex;
+    flex-direction: row;
     text-align: center;
     align-self: center;
     width: 10%;
