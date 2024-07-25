@@ -257,14 +257,15 @@ def upvote(id):
             (id,)
         )
         result = cur.fetchone()
+        # TODO select downvotes too
 
         if result is None:
             return jsonify({'status': 'failure',
                         'votes': -1})
 
         cur.execute(
-            'SELECT user_id FROM user_votes'
-            ' WHERE post_id = ? AND user_id = ? AND vote = TRUE',
+            'SELECT vote FROM user_votes'
+            ' WHERE post_id = ? AND user_id = ?',
             (id, g.user['id'])
         )
         upvoted = cur.fetchone()
@@ -273,19 +274,24 @@ def upvote(id):
         if upvoted is not None:
             cur.execute(
                 'DELETE FROM user_votes'
-                ' WHERE user_id = ? AND post_id = ? AND vote = TRUE',
+                ' WHERE user_id = ? AND post_id = ?',
                 (g.user['id'], id)
             )
             db.commit()
             cur.execute(
-                'UPDATE post SET upvotes = ?'
-                ' WHERE id = ?',
-                (result['upvotes'] - 1, id)
+                    'UPDATE post SET upvotes = ?'
+                    ' WHERE id = ?',
+                    (result['upvotes'] - 1, id)
             )
             db.commit()
+            if upvoted[0]: # user has upvoted this post before
+                return jsonify({'status': 'success',
+                                'upvotes': result['upvotes'] - 1,
+                                'upvotes': result['d']})
+            else:
 
-            return jsonify({'status': 'success',
-                            'votes': result['upvotes'] - 1})
+                return jsonify({'status': 'success',
+                                'votes': result['upvotes'] - 1})
         else:
             cur.execute(
                 'UPDATE post SET upvotes = ?'

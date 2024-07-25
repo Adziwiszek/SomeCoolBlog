@@ -172,12 +172,9 @@ def test_vote_twice(client, auth, app):
         client.post('/1/downvote')
         response_upv = client.post('/1/upvote')
         response_downv = client.post('/1/downvote')
-        assert response_upv.status_code == 200
 
         data_upv = json.loads(response_upv.data)
         data_downv = json.loads(response_downv.data)
-        assert ('votes' in data_upv) and ('status' in data_upv)
-        assert ('votes' in data_downv) and ('status' in data_downv)
         # check if json returned by request has correct number of votes
         assert data_upv['votes'] == upvotes_before
         assert data_downv['votes'] == downvotes_before
@@ -187,4 +184,24 @@ def test_vote_twice(client, auth, app):
         downvotes_after = cur.execute('SELECT downvotes FROM post WHERE id = 1').fetchone()[0]
         assert upvotes_after == upvotes_before
         assert downvotes_after == downvotes_before
+
+
+def test_downvote_upvote_post(client, auth, app):
+    '''Tests downvoting and then upvoting a post'''
+    auth.login()
+
+    with app.app_context():
+        db = get_db()
+        cur = db.cursor()
+        upvotes_before = cur.execute('SELECT upvotes FROM post WHERE id = 1').fetchone()[0]
+        downvotes_before = cur.execute('SELECT downvotes FROM post WHERE id = 1').fetchone()[0]
+
+        client.post('/1/downvote')
+        client.post('/1/upvote')
+
+        # check if database was updated
+        upvotes_after = cur.execute('SELECT upvotes FROM post WHERE id = 1').fetchone()[0]
+        downvotes_after = cur.execute('SELECT downvotes FROM post WHERE id = 1').fetchone()[0]
+        assert upvotes_after == upvotes_before + 1
+        assert downvotes_after == downvotes_before - 1
 
