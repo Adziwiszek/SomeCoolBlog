@@ -37,3 +37,10 @@ CREATE TABLE user_votes (
   post_id INTEGER NOT NULL,
   vote BOOLEAN NOT NULL DEFAULT TRUE -- TRUE -> upvote FALSE -> downvote
 );
+
+CREATE Table tag {
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id INTEGER NOT NULL,
+  body, TEXT NOT NULL,
+  FOREIGN KEY (post_id) REFERENCES post (id)
+}
