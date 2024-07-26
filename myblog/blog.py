@@ -1,6 +1,6 @@
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for,
-    jsonify
+    jsonify, current_app
 )
 from werkzeug.exceptions import abort
 # from flask_wtf.csrf import generate_csrf
@@ -183,63 +183,84 @@ def send_message():
         })
         return response
         
-    return jsonify({'status': 'failure'})
+    return jsonify({'status': 'failure'})    
+
 
 @bp.route('/<int:id>/downvote', methods=('POST',))
 def downvote(id):
+    '''Downvote a post. If post was already downvoted by this user, remove the downvote.
+    If this user upvoted this post already, remove the upvote and downvote.'''
     try:
-        db = get_db()
+        db = get_db() 
         cur = db.cursor()
-        cur.execute(
-            'SELECT downvotes FROM post'
+        votes = cur.execute(
+            'SELECT upvotes, downvotes FROM post'
             ' WHERE id = ?',
             (id,)
-        )
-        result = cur.fetchone()
-
-        if result is None:
+        ).fetchone()
+        if votes is None:
             return jsonify({'status': 'failure',
-                        'votes': -1})
+                            'message': 'post doesn\'t exist!'})
         
-        cur.execute(
-            'SELECT user_id FROM user_votes'
-            ' WHERE post_id = ? AND user_id = ? AND vote = FALSE',
-            (id, g.user['id'])
-        )
-        downvoted = cur.fetchone()
-        # User already upvoted this post
-        if downvoted is not None:
-            cur.execute(
-                'DELETE FROM user_votes'
-                ' WHERE user_id = ? AND post_id = ? AND vote = FALSE',
-                (g.user['id'], id)
-            )
-            db.commit()
-            cur.execute(
-                'UPDATE post SET downvotes = ?'
-                ' WHERE id = ?',
-                (result['downvotes'] - 1, id)
-            )
-            db.commit()
+        voted = cur.execute(
+            'SELECT vote FROM user_votes'
+            ' WHERE user_id = ? AND post_id = ?',
+            (g.user['id'], id)
+        ).fetchone()   
 
-            return jsonify({'status': 'success',
-                            'votes': result['downvotes'] - 1})
-        else:
-            cur.execute(
-                'UPDATE post SET downvotes = ?'
-                ' WHERE id = ?',
-                (result['downvotes'] + 1, id)
-            )
-            db.commit()
-
+        if voted is not None: # user has voted on this post before
+            voted = voted[0]
+            if not voted: # user downvoted this post before
+                cur.execute(
+                    'DELETE FROM user_votes WHERE post_id = ? AND user_id = ?',
+                    (id, g.user['id'])
+                )
+                cur.execute(
+                    'UPDATE post SET downvotes = ?'
+                    ' WHERE id = ?',
+                    (votes[1] - 1, id)
+                )
+                db.commit()
+                return jsonify({'status': 'success',
+                            'votes': {
+                                'upvotes': votes[0],
+                                'downvotes': votes[1] - 1
+                            }})      
+            else: # user upvoted before
+                cur.execute(
+                    'UPDATE user_votes SET vote = FALSE'
+                    ' WHERE user_id = ? AND post_id = ?',
+                    (g.user['id'], id)
+                )      
+                cur.execute(
+                    'UPDATE post SET upvotes = ?, downvotes = ?'
+                    ' WHERE id = ?',
+                    (votes[0] - 1, votes[1] + 1, id)
+                )
+                db.commit()
+                return jsonify({'status': 'success',
+                            'votes': {
+                                'upvotes': votes[0] - 1,
+                                'downvotes': votes[1] + 1
+                            }})
+        else: # user hasn't voted on this before\
             cur.execute(
                 'INSERT INTO user_votes (user_id, post_id, vote)'
-                ' VALUES (?, ?, FALSE)',
-                (g.user['id'], id)
+                ' VALUES (?, ?, ?)',
+                (g.user['id'], id, False)
+            )
+            cur.execute(
+                'UPDATE post SET downvotes = ?'
+                ' WHERE id = ?',
+                (votes[1] + 1, id)
             )
             db.commit()
+
             return jsonify({'status': 'success',
-                            'votes': result['downvotes'] + 1}) 
+                            'votes': {
+                                'upvotes': votes[0],
+                                'downvotes': votes[1] + 1
+                            }})        
     except Exception as e:
         # current_app.logger.error(f'Error in upvote route: {str(e)}')
         db.rollback()
@@ -248,66 +269,79 @@ def downvote(id):
 
 @bp.route('/<int:id>/upvote', methods=('POST',))
 def upvote(id):
+    '''Upvote a post. If post was already upvoted by this user, remove the upvote.
+    If this user downvoted this post already, remove the downvote and upvote.'''
     try:
-        db = get_db()
+        db = get_db() 
         cur = db.cursor()
-        cur.execute(
-            'SELECT upvotes FROM post'
+        votes = cur.execute(
+            'SELECT upvotes, downvotes FROM post'
             ' WHERE id = ?',
             (id,)
-        )
-        result = cur.fetchone()
-        # TODO select downvotes too
-
-        if result is None:
+        ).fetchone()
+        if votes is None:
             return jsonify({'status': 'failure',
-                        'votes': -1})
-
-        cur.execute(
+                            'message': 'post doesn\'t exist!'})
+        
+        voted = cur.execute(
             'SELECT vote FROM user_votes'
-            ' WHERE post_id = ? AND user_id = ?',
-            (id, g.user['id'])
-        )
-        upvoted = cur.fetchone()
-        print(f"{upvoted}")
-        # User already upvoted this post
-        if upvoted is not None:
-            cur.execute(
-                'DELETE FROM user_votes'
-                ' WHERE user_id = ? AND post_id = ?',
-                (g.user['id'], id)
-            )
-            db.commit()
-            cur.execute(
+            ' WHERE user_id = ? AND post_id = ?',
+            (g.user['id'], id)
+        ).fetchone()   
+
+        if voted is not None: # user has voted on this post before
+            voted = voted[0]
+            if voted: # user upvoted this post before
+                cur.execute(
+                    'DELETE FROM user_votes WHERE post_id = ? AND user_id = ?',
+                    (id, g.user['id'])
+                )
+                cur.execute(
                     'UPDATE post SET upvotes = ?'
                     ' WHERE id = ?',
-                    (result['upvotes'] - 1, id)
-            )
-            db.commit()
-            if upvoted[0]: # user has upvoted this post before
+                    (votes[0] - 1, id)
+                )
+                db.commit()
                 return jsonify({'status': 'success',
-                                'upvotes': result['upvotes'] - 1,
-                                'upvotes': result['d']})
+                            'votes': {
+                                'upvotes': votes[0] - 1,
+                                'downvotes': votes[1]
+                            }})      
             else:
-
+                cur.execute(
+                    'UPDATE user_votes SET vote = TRUE'
+                    ' WHERE user_id = ? AND post_id = ?',
+                    (g.user['id'], id)
+                )      
+                cur.execute(
+                    'UPDATE post SET upvotes = ?, downvotes = ?'
+                    ' WHERE id = ?',
+                    (votes[0] + 1, votes[1] - 1, id)
+                )
+                db.commit()
                 return jsonify({'status': 'success',
-                                'votes': result['upvotes'] - 1})
-        else:
+                            'votes': {
+                                'upvotes': votes[0] + 1,
+                                'downvotes': votes[1] - 1
+                            }})
+        else: # user hasn't voted on this before
+            cur.execute(
+                'INSERT INTO user_votes (user_id, post_id)'
+                ' VALUES (?, ?)',
+                (g.user['id'], id)
+            )
             cur.execute(
                 'UPDATE post SET upvotes = ?'
                 ' WHERE id = ?',
-                (result['upvotes'] + 1, id)
+                (votes[0] + 1, id)
             )
             db.commit()
 
-            cur.execute(
-                'INSERT INTO user_votes (user_id, post_id, vote)'
-                ' VALUES (?, ?, TRUE)',
-                (g.user['id'], id)
-            )
-            db.commit()
             return jsonify({'status': 'success',
-                            'votes': result['upvotes'] + 1})    
+                            'votes': {
+                                'upvotes': votes[0] + 1,
+                                'downvotes': votes[1]
+                            }})        
     except Exception as e:
         # current_app.logger.error(f'Error in upvote route: {str(e)}')
         db.rollback()
