@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const downvoteDivs = document.querySelectorAll('[id=downvote]');
     
     function vote(post_id, action) {
-        fetch('/'+post_id+'/'+(action == 1? '/upvote' : '/downvote'), {
+        fetch('/'+post_id+'/'+(action == 1 ? '/upvote' : '/downvote'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -16,9 +16,13 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                const voteDiv = document.querySelector(`[id=${action === 1 ? 'upvote' : 'downvote'}][data-post-id="${post_id}"]`);
-                if(voteDiv) {
-                    voteDiv.textContent = textContent = `${action === 1 ? '↑' : '↓'} ${data.votes}`;
+                const upvoteDiv = document.querySelector(`[id=${'upvote'}][data-post-id="${post_id}"]`);
+                const downvoteDiv = document.querySelector(`[id=${'downvote'}][data-post-id="${post_id}"]`);
+                if(upvoteDiv) {
+                    upvoteDiv.textContent = textContent = `${'↑'} ${data.votes.upvotes}`;
+                }
+                if(downvoteDiv) {
+                    downvoteDiv.textContent = textContent = `${'↓'} ${data.votes.downvotes}`;
                 }
             }
         })
