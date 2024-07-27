@@ -26,12 +26,14 @@ def create():
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
+        tags = request.form.getlist('tags')
         error = None
 
         if not title:
             error = 'Title is required.'
 
         if error is not None:
+            # return jsonify()
             flash(error)
         else:
             db = get_db()
@@ -40,6 +42,23 @@ def create():
                 ' VALUES (?, ?, ?)',
                 (title, body, g.user['id'])
             )
+            new_post_id = db.execute('SELECT COUNT(id) FROM post').fetchone()[0]
+            for tag in tags:
+                if tag:
+                    db.execute(
+                        'INSERT OR IGNORE INTO tag (name) VALUES (?)',
+                        (tag,)
+                    )
+                    tag_id = db.execute(
+                        'SELECT id FROM tag WHERE name = ?',
+                        (tag,)
+                    ).fetchone()[0]
+
+                    db.execute(
+                        'INSERT INTO post_tags (post_id, tag_id) VALUES (?, ?)',
+                        (new_post_id, tag_id)
+                    )
+
             db.commit()
             return redirect(url_for('blog.index'))
 
@@ -95,6 +114,7 @@ def update(id):
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
+        tags = request.form.getlist('tags')
         error = None
 
         if not title:

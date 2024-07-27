@@ -2,6 +2,8 @@ DROP TABLE IF EXISTS user;
 DROP TABLE IF EXISTS post;
 DROP TABLE IF EXISTS comment;
 DROP TABLE IF EXISTS user_votes;
+DROP TABLE IF EXISTS tag;
+DROP TABLE IF EXISTS post_tags;
 
 CREATE TABLE user (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,9 +40,15 @@ CREATE TABLE user_votes (
   vote BOOLEAN NOT NULL DEFAULT TRUE -- TRUE -> upvote FALSE -> downvote
 );
 
-CREATE Table tag {
+CREATE TABLE tag (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE post_tags (
   post_id INTEGER NOT NULL,
-  body, TEXT NOT NULL,
-  FOREIGN KEY (post_id) REFERENCES post (id)
-}
+  tag_id INTEGER NOT NULL,
+  FOREIGN KEY (post_id) REFERENCES posts (id),
+  FOREIGN KEY (tag_id) REFERENCES tags (id),
+  PRIMARY KEY (post_id, tag_id)
+);
