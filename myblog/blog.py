@@ -28,8 +28,6 @@ def get_post(id, check_author=True):
         (id,)
     ).fetchone()
 
-
-
     if post is None:
         abort(404, f"Post id {id} doesn't exist.")
 
@@ -40,7 +38,7 @@ def get_post(id, check_author=True):
     post_dict = dict(post)
     tags = get_tags(post['id'])
     post_dict['tags'] = tags
-    
+
     return post_dict
 
 def get_posts_comments(post_id):
@@ -139,7 +137,7 @@ def update(id):
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
-        tags = request.form['tags']
+        tags = request.form['tags'].split()
         error = None
 
         if not title:
@@ -154,6 +152,23 @@ def update(id):
                 ' WHERE id = ?',
                 (title, body, id)
             )
+            db.execute(
+                'DELETE FROM post_tags WHERE post_id = ?',
+                (id,)
+            )
+            for tag in tags:
+                db.execute(
+                    'INSERT OR IGNORE INTO tag (name) VALUES (?)',
+                    (tag,)
+                )
+                tag_id = db.execute(
+                    'SELECT id FROM tag WHERE name = ?',
+                    (tag,)
+                ).fetchone()[0]
+                db.execute(
+                    'INSERT OR IGNORE INTO post_tags (post_id, tag_id) VALUES (?, ?)',
+                    (id, tag_id)
+                )
             db.commit()
             return redirect(url_for('blog.index'))
 
