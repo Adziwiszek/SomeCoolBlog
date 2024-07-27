@@ -9,7 +9,7 @@ from myblog.db import get_db
 
 bp = Blueprint('blog', __name__)
 
-def get_tags(post_id):
+def get_post_tags(post_id):
     tags = get_db().execute(
         'SELECT t.name'
         ' FROM tag t JOIN post_tags pt ON t.id = pt.tag_id'
@@ -34,9 +34,9 @@ def get_post(id, check_author=True):
     if check_author and post['author_id'] != g.user['id']:
         abort(403)
 
-    get_tags(id)
+    get_post_tags(id)
     post_dict = dict(post)
-    tags = get_tags(post['id'])
+    tags = get_post_tags(post['id'])
     post_dict['tags'] = tags
 
     return post_dict
@@ -79,7 +79,7 @@ def index():
     tagged_posts = []
     for post in posts:
         post_dict = dict(post)
-        tags = get_tags(post['id'])
+        tags = get_post_tags(post['id'])
         post_dict['tags'] = tags
         tagged_posts.append(post_dict)
 
@@ -193,7 +193,7 @@ def read(id):
         (id,)
     ).fetchall()
     post_dict = dict(post)
-    tags = get_tags(post['id'])
+    tags = get_post_tags(post['id'])
     post_dict['tags'] = tags
     return render_template('blog/read.html', post=post_dict, comments=comments)
 
@@ -410,3 +410,9 @@ def upvote(id):
         db.rollback()
         return jsonify({'status': 'error', 'message': 'An unexpected error occurred'}), 500
     
+@bp.route('/gettags', methods=('GET',))
+def get_tags():
+    db = get_db()
+    tags = db.execute('SELECT name FROM tag').fetchall()
+    tags = [tag['name'] for tag in tags]
+    return tags

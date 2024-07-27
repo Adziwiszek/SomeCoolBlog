@@ -2,12 +2,6 @@ import pytest
 from myblog.db import get_db
 import json
 
-# TODO:
-# 1) get all tags
-# 2) get posts with given tags
-# 3) set, update, delete tags
-# 4) when adding tags, select from existing 
-
 def test_add_tags(client, auth, app):
     auth.login()
 
@@ -41,6 +35,9 @@ def test_update_tags(client, auth, app):
         print(data_post)
         assert 'tag4' in data_post
 
+def test_get_all_tags(client, auth, app):
+    auth.login()
+    client.post('/create', data={'title': 'created', 'body': '', 'tags': 'tag1s tag2'})
 
-
-
+    response = client.get('/gettags')
+    assert b'tag2' in response.data

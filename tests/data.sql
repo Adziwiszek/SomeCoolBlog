@@ -8,8 +8,8 @@ INSERT INTO post (title, body, author_id, created, upvotes, downvotes)
 VALUES
   ('test title', 'test' || x'0a' || 'body', 1, '2018-01-01 00:00:00', 0, 0);
 
-INSERT INTO tag (name) VALUES ('my-tag')
-INSERT INTO post_tags (post_id, tag_id) VALUES (1, 1)
+-- INSERT INTO tag (name) VALUES ('my-tag')
+-- INSERT INTO post_tags (post_id, tag_id) VALUES (1, 1)
 -- INSERT INTO comment (post_id, author_id, body)
 -- VALUES
 --   (1, 1, 'body')
