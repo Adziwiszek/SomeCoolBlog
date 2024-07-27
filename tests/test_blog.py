@@ -58,7 +58,6 @@ def test_create(client, auth, app):
         count = db.execute('SELECT COUNT(id) FROM post').fetchone()[0]
         assert count == 2
 
-
 def test_update(client, auth, app):
     auth.login()
     assert client.get('/1/update').status_code == 200

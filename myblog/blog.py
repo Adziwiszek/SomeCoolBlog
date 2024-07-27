@@ -192,7 +192,10 @@ def read(id):
         'SELECT c.id, c.body, c.created, u.username FROM comment c JOIN user u ON c.author_id = u.id WHERE c.post_id = ? ORDER BY c.created DESC',
         (id,)
     ).fetchall()
-    return render_template('blog/read.html', post=post  , comments=comments)
+    post_dict = dict(post)
+    tags = get_tags(post['id'])
+    post_dict['tags'] = tags
+    return render_template('blog/read.html', post=post_dict, comments=comments)
 
 
 @bp.route('/<int:id>/receive', methods=('POST', 'GET'))

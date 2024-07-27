@@ -5,6 +5,12 @@
 {% block content %}
     <header>
         <h1>{{ post['title'] }}</h1>
+        <div class="tags">
+            Tags: 
+            {% for tag in post['tags'] %}
+            {{ tag }} 
+            {% endfor %}
+          </div>
         <div class="voting">
             <div class="upvote" id="upvote" data-post-id="{{ post['id'] }}">↑ {{ post['upvotes'] }}</div>
             <div class="downvote" id="downvote" data-post-id="{{ post['id'] }}">↓ {{ post['downvotes'] }}</div> 
