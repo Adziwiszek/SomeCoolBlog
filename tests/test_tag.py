@@ -11,7 +11,7 @@ import json
 def test_add_tags(client, auth, app):
     auth.login()
 
-    client.post('/create', data={'title': 'created', 'body': '', 'tags': ['tag1', 'tag2']})
+    client.post('/create', data={'title': 'created', 'body': '', 'tags': 'tag1 tag2'})
 
     with app.app_context():
         db = get_db()
@@ -20,8 +20,26 @@ def test_add_tags(client, auth, app):
         assert tags == 2
 
         # test adding tag that already exists in database
-        client.post('/create', data={'title': 'created', 'body': '', 'tags': ['tag2', 'tag3']})
+        client.post('/create', data={'title': 'created', 'body': '', 'tags': 'tag2 tag3'})
         tags = db.execute('SELECT COUNT(name) FROM tag').fetchone()[0]
         assert tags == 3
+
+
+def test_update_tags(client, auth, app):
+    auth.login()
+    client.post('/create', data={'title': 'created', 'body': '', 'tags': 'tag1s tag2'})
+    client.post('/2/update', data={'title': 'updated', 'body': '', 'tags': 'tag4 tag3'})
+
+    with app.app_context():
+        db = get_db()
+        post = db.execute(
+            'SELECT t.name'
+            ' FROM tag t JOIN post_tags pt ON t.id = pt.tag_id'
+            ' WHERE pt.post_id = 2'
+        ).fetchall()
+        data_post = [p['name'] for p in post]
+        print(data_post)
+        assert 'tag4' in data_post
+
 
 

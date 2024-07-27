@@ -9,6 +9,66 @@ from myblog.db import get_db
 
 bp = Blueprint('blog', __name__)
 
+def get_tags(post_id):
+    tags = get_db().execute(
+        'SELECT t.name'
+        ' FROM tag t JOIN post_tags pt ON t.id = pt.tag_id'
+        ' WHERE pt.post_id = ?',
+        (post_id,)
+    ).fetchall()
+
+
+    return [tag['name'] for tag in tags]
+
+def get_post(id, check_author=True):
+    post = get_db().execute(
+        'SELECT p.id, title, body, created, author_id, username, upvotes, downvotes'
+        ' FROM post p JOIN user u ON p.author_id = u.id'
+        ' WHERE p.id = ?',
+        (id,)
+    ).fetchone()
+
+
+
+    if post is None:
+        abort(404, f"Post id {id} doesn't exist.")
+
+    if check_author and post['author_id'] != g.user['id']:
+        abort(403)
+
+    get_tags(id)
+    post_dict = dict(post)
+    tags = get_tags(post['id'])
+    post_dict['tags'] = tags
+    
+    return post_dict
+
+def get_posts_comments(post_id):
+    comments = get_db().execute(
+        'SELECT c.id, c.body, c.created, u.username'
+        ' FROM comment c JOIN user u ON c.author_id = u.id'
+        ' WHERE c.post_id = ?'
+        ' ORDER BY created DESC',
+        (post_id,)
+    ).fetchall()
+    if comments is None or comments == []:
+        return jsonify({'status': 'success',
+                        'message': 'no comments found',
+                        'comments': []})
+
+    return jsonify({
+        'status': 'success',
+        'message': 'comments found',
+        'comments': [
+            {
+                'id': comment['id'],
+                'body': comment['body'],
+                'created': comment['created'].isoformat(),
+                'username': comment['username']
+            } for comment in comments
+        ]
+    })
+
 @bp.route('/')
 def index():
     db = get_db()
@@ -18,7 +78,14 @@ def index():
         ' ORDER BY created DESC'
     ).fetchall()
 
-    return render_template('blog/index.html', posts=posts)
+    tagged_posts = []
+    for post in posts:
+        post_dict = dict(post)
+        tags = get_tags(post['id'])
+        post_dict['tags'] = tags
+        tagged_posts.append(post_dict)
+
+    return render_template('blog/index.html', posts=tagged_posts)
 
 @bp.route('/create', methods=('GET', 'POST'))
 @login_required
@@ -26,14 +93,13 @@ def create():
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
-        tags = request.form.getlist('tags')
+        tags = request.form['tags'].split()
         error = None
 
         if not title:
             error = 'Title is required.'
 
         if error is not None:
-            # return jsonify()
             flash(error)
         else:
             db = get_db()
@@ -64,47 +130,6 @@ def create():
 
     return render_template('blog/create.html')
 
-def get_post(id, check_author=True):
-    post = get_db().execute(
-        'SELECT p.id, title, body, created, author_id, username, upvotes, downvotes'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' WHERE p.id = ?',
-        (id,)
-    ).fetchone()
-
-    if post is None:
-        abort(404, f"Post id {id} doesn't exist.")
-
-    if check_author and post['author_id'] != g.user['id']:
-        abort(403)
-
-    return post
-
-def get_posts_comments(post_id):
-    comments = get_db().execute(
-        'SELECT c.id, c.body, c.created, u.username'
-        ' FROM comment c JOIN user u ON c.author_id = u.id'
-        ' WHERE c.post_id = ?'
-        ' ORDER BY created DESC',
-        (post_id,)
-    ).fetchall()
-    if comments is None or comments == []:
-        return jsonify({'status': 'success',
-                        'message': 'no comments found',
-                        'comments': []})
-
-    return jsonify({
-        'status': 'success',
-        'message': 'comments found',
-        'comments': [
-            {
-                'id': comment['id'],
-                'body': comment['body'],
-                'created': comment['created'].isoformat(),
-                'username': comment['username']
-            } for comment in comments
-        ]
-    })
 
 @bp.route('/<int:id>/update', methods=('GET', 'POST'))
 @login_required
@@ -114,7 +139,7 @@ def update(id):
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
-        tags = request.form.getlist('tags')
+        tags = request.form['tags']
         error = None
 
         if not title:

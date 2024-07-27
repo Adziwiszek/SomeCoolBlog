@@ -51,7 +51,7 @@ def test_exists_required(client, auth, path):
 def test_create(client, auth, app):
     auth.login()
     assert client.get('/create').status_code == 200
-    client.post('/create', data={'title': 'created', 'body': '', 'tags': ['tag1', 'tag2']})
+    client.post('/create', data={'title': 'created', 'body': '', 'tags': 'tag1 tag2'})
 
     with app.app_context():
         db = get_db()
@@ -62,7 +62,7 @@ def test_create(client, auth, app):
 def test_update(client, auth, app):
     auth.login()
     assert client.get('/1/update').status_code == 200
-    client.post('/1/update', data={'title': 'updated', 'body': '', 'tags': ['tag4', 'tag3']})
+    client.post('/1/update', data={'title': 'updated', 'body': '', 'tags': 'tag4 tag3'})
 
     with app.app_context():
         db = get_db()
