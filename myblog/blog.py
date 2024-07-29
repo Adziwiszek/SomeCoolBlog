@@ -6,6 +6,7 @@ from werkzeug.exceptions import abort
 # from flask_wtf.csrf import generate_csrf
 from myblog.auth import login_required
 from myblog.db import get_db
+import sqlite3
 
 bp = Blueprint('blog', __name__)
 
@@ -416,3 +417,45 @@ def get_tags():
     tags = db.execute('SELECT name FROM tag').fetchall()
     tags = [tag['name'] for tag in tags]
     return tags
+
+@bp.route('/post', methods=['Get'])
+def get_posts():
+    parsed_args = request.args.to_dict()
+    # bar = {k: v.split(',') for k, v in parsed_args.items()}
+    tags = request.args.get('tag', '').split(',')
+
+    if not tags:
+        return jsonify({'status': 'failure',
+                        'message': 'user didn\'t provide any tags'})
+
+    query = '''
+    SELECT DISTINCT p.id, p.title, p.body, p.created, p.upvotes, p.downvotes, u.username as author
+     FROM post p
+     JOIN user u ON p.author_id = u.id
+     JOIN post_tags pt ON pt.post_id = p.id
+     JOIN tag t ON pt.tag_id = t.id
+     WHERE t.name IN ({})
+     ORDER BY p.created DESC
+    '''.format(','.join('?' * len(tags)))
+
+    try:
+        db = get_db()
+        cur = db.cursor()
+        print('test1')
+        cur.execute(query, tags)
+        print('test2')
+        posts = cur.fetchall()
+
+        result = []
+        for post in posts:
+            post_dict = dict(post)
+            result.append(post_dict)
+
+        return jsonify({'status': 'success', 
+                        'posts': result}), 200
+    
+    except sqlite3.Error as e:
+        return jsonify({'status': 'failure',
+                        'message': 'failed to get posts'})
+
+
