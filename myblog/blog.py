@@ -435,7 +435,7 @@ def get_posts():
     print(titles)
 
     query = '''
-    SELECT DISTINCT p.id, p.title, p.body, p.created, p.upvotes, p.downvotes, u.username as author
+    SELECT DISTINCT p.id, p.title, p.body, p.created, p.upvotes, p.downvotes, u.username as username, p.author_id
      FROM post p
      JOIN user u ON p.author_id = u.id
      LEFT JOIN post_tags pt ON pt.post_id = p.id
