@@ -2,6 +2,13 @@
 
 {% block header %}
   <h1>{% block title %}Posts{% endblock %}</h1>
+  <form method="get" id="searchbar">
+    <div class="searchbar-posts">
+      <!-- <label for="terms">Entert tags to filter by: </label> -->
+      <input type="text" id="tags" name="tags" class="tags">
+      <input type="submit" value="search" class="search-by-tag">
+    </div>
+  </form>
   {% if g.user %}
     <a class="action" href="{{ url_for('blog.create') }}">New</a>
   {% endif %}

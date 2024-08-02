@@ -186,3 +186,26 @@ button.send-message {
 .comment-meta {
     color: #377ba8;
 }
+
+.searchbar-posts{
+    /* display: flex; */
+    /* flex-direction: row; */
+    margin: 0;
+    margin-bottom: 0;
+    /* margin-left: 1em; */
+    /* margin-right: 1em; */
+    padding: 0;
+}
+
+.searchbar-posts > input {
+    margin: 0;
+}
+
+.search-by-tag {
+    display: inline;
+}
+
+/* .tags {
+    margin-bottom: 0;
+    padding: 0;
+} */
