@@ -418,12 +418,11 @@ def get_tags():
     tags = [tag['name'] for tag in tags]
     return tags
 
-@bp.route('/post', methods=['Get'])
+@bp.route('/post', methods=('GET',))
 def get_posts():
     parsed_args = request.args.to_dict()
     # bar = {k: v.split(',') for k, v in parsed_args.items()}
-    tags = request.args.get('tag', '').split(',')
-
+    tags = request.args.get('tag', '').split(' ')
     if not tags:
         return jsonify({'status': 'failure',
                         'message': 'user didn\'t provide any tags'})
@@ -441,18 +440,23 @@ def get_posts():
     try:
         db = get_db()
         cur = db.cursor()
-        print('test1')
         cur.execute(query, tags)
-        print('test2')
         posts = cur.fetchall()
 
-        result = []
+
+        tagged_posts = []
         for post in posts:
             post_dict = dict(post)
-            result.append(post_dict)
-
-        return jsonify({'status': 'success', 
-                        'posts': result}), 200
+            tags = get_post_tags(post['id'])
+            post_dict['tags'] = tags
+            tagged_posts.append(post_dict)
+        # result = []
+        # for post in posts:
+        #     post_dict = dict(post)
+        #     result.append(post_dict)
+        return render_template('blog/index.html', posts=tagged_posts)
+        # return jsonify({'status': 'success', 
+        #                 'posts': result}), 200
     
     except sqlite3.Error as e:
         return jsonify({'status': 'failure',

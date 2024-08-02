@@ -2,10 +2,11 @@
 
 {% block header %}
   <h1>{% block title %}Posts{% endblock %}</h1>
-  <form method="get" id="searchbar">
+  <form method="get" id="searchbar-tags" action="/post">
     <div class="searchbar-posts">
       <!-- <label for="terms">Entert tags to filter by: </label> -->
-      <input type="text" id="tags" name="tags" class="tags">
+      <input type="text" id="tags" name="tag" class="tags" placeholder="tags">
+      <input type="text" id="title" name="title" class="tags" placeholder="titles">
       <input type="submit" value="search" class="search-by-tag">
     </div>
   </form>
