@@ -51,11 +51,10 @@ def test_get_posts_with_tags(client, auth, app):
     client.post('/create', data={'title': 'created', 'body': '', 'tags': 'my-tag'})
 
     response = client.get('/post?tag=my-tag')
-    print(response)
-    data_response = json.loads(response.data)
-    print(data_response)
-    assert data_response['status'] == 'success'
-    assert len(data_response['posts']) == 2
+    assert b'failure' not in response.data
+    # check if two posts with tag 'my-tag' are loaded to the page
+    assert b'created' in response.data 
+    assert b'test title' in response.data
 
 
     
