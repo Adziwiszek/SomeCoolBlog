@@ -51,6 +51,7 @@ def test_get_posts_with_tags(client, auth, app):
     client.post('/create', data={'title': 'created', 'body': '', 'tags': 'my-tag'})
 
     response = client.get('/post?tag=my-tag')
+    print(response)
     data_response = json.loads(response.data)
     print(data_response)
     assert data_response['status'] == 'success'

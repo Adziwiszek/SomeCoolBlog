@@ -422,27 +422,41 @@ def get_tags():
 def get_posts():
     parsed_args = request.args.to_dict()
     # bar = {k: v.split(',') for k, v in parsed_args.items()}
-    tags = request.args.get('tag', '').split(' ')
-    if not tags:
+    tags_raw = request.args.get('tag', '').split(' ')
+    titles_raw = request.args.get('title', '').split(' ')
+    if not tags_raw or not titles_raw:
         return jsonify({'status': 'failure',
-                        'message': 'user didn\'t provide any tags'})
+                        'message': 'user didn\'t provide any info'})
+
+    # preprocess input
+    tags = [tag.strip() for tag in tags_raw]
+    titles = [title.strip() for title in titles_raw if title != '']
+    print(tags)
+    print(titles)
 
     query = '''
     SELECT DISTINCT p.id, p.title, p.body, p.created, p.upvotes, p.downvotes, u.username as author
      FROM post p
      JOIN user u ON p.author_id = u.id
-     JOIN post_tags pt ON pt.post_id = p.id
-     JOIN tag t ON pt.tag_id = t.id
-     WHERE t.name IN ({})
+     LEFT JOIN post_tags pt ON pt.post_id = p.id
+     LEFT JOIN tag t ON pt.tag_id = t.id
+     WHERE ({0} OR {1})
      ORDER BY p.created DESC
-    '''.format(','.join('?' * len(tags)))
+    '''
 
+    tag_conditions = 't.name IN ({})'.format(','.join(['?'] * len(tags))) if tags else 'FALSE'
+    title_conditions = ' OR '.join(['p.title LIKE ?'] * len(titles)) if titles else 'FALSE'
+
+    query = query.format(tag_conditions, title_conditions) 
+    params = tags + (['%' + title + '%' for title in titles] if len(titles) > 0 else [])
+    print(f'final query: {query}')
+    print(f'final params: {params}')
+    
     try:
         db = get_db()
         cur = db.cursor()
-        cur.execute(query, tags)
+        cur.execute(query, params)
         posts = cur.fetchall()
-
 
         tagged_posts = []
         for post in posts:
@@ -450,7 +464,8 @@ def get_posts():
             tags = get_post_tags(post['id'])
             post_dict['tags'] = tags
             tagged_posts.append(post_dict)
-        # result = []
+        print(f'posts: {tagged_posts}')
+        # result = []/
         # for post in posts:
         #     post_dict = dict(post)
         #     result.append(post_dict)
