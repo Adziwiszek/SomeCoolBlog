@@ -1,3 +1,8 @@
+"""
+@defgroup db_functions
+@{
+"""
+
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for,
     jsonify, current_app

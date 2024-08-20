@@ -21,3 +21,4 @@ with Flask.
     ```flask --app myblog --debug run```
  - now you can open the link that will be shown in your browser and see the website!
 
+
