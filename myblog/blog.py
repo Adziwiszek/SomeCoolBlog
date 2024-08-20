@@ -22,6 +22,7 @@ def get_post_tags(post_id):
     return [tag['name'] for tag in tags]
 
 def get_post(id, check_author=True):
+    '''Returns dictionary of posts.'''
     post = get_db().execute(
         'SELECT p.id, title, body, created, author_id, username, upvotes, downvotes'
         ' FROM post p JOIN user u ON p.author_id = u.id'
@@ -70,6 +71,7 @@ def get_posts_comments(post_id):
 
 @bp.route('/')
 def index():
+    '''Redirects user to index page with all posts posted'''
     db = get_db()
     posts = db.execute(
         'SELECT p.id, title, body, created, author_id, username, upvotes, downvotes'
@@ -89,6 +91,7 @@ def index():
 @bp.route('/create', methods=('GET', 'POST'))
 @login_required
 def create():
+    '''Handles creating a post.'''
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
@@ -130,11 +133,11 @@ def create():
     return render_template('blog/create.html')
 
 
-@bp.route('/<int:id>/update', methods=('GET', 'POST'))
+@bp.route('/post/<int:id>', methods=('PATCH', 'POST'))
 @login_required
 def update(id):
     post = get_post(id)
-
+    print('updating...')
     if request.method == 'POST':
         title = request.form['title']
         body = request.form['body']
@@ -175,7 +178,16 @@ def update(id):
 
     return render_template('blog/update.html', post=post)
 
-@bp.route('/<int:id>/delete', methods=('POST',))
+@bp.route('/update/<int:id>', methods=('GET',))
+@login_required
+def update_page(id):
+    post = get_post(id)
+    if request.method == 'GET':
+        print('getting update page...')
+        return render_template('blog/update.html', post=post)
+    return  redirect(url_for('blog.index'))
+
+@bp.route('/post/<int:id>', methods=('DELETE',))
 @login_required
 def delete(id):
     get_post(id)
@@ -185,7 +197,7 @@ def delete(id):
     return redirect(url_for('blog.index'))
 
 
-@bp.route('/<int:id>/read', methods=('GET', 'POST'))
+@bp.route('/post/<int:id>/', methods=('GET',))
 def read(id):
     post = get_post(id, False)
     db = get_db()

@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-  <form method="post">
+  <form action="{{ url_for('blog.update', id=post['id']) }}" method="post">
     <label for="title">Title</label>
     <input name="title" id="title"
       value="{{ request.form['title'] or post['title'] }}" required>
@@ -19,4 +19,8 @@
   <form action="{{ url_for('blog.delete', id=post['id']) }}" method="post">
     <input class="danger" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
   </form>
-{% endblock %}r
+{% endblock %}
+
+
+
+<script src="{{ url_for('static', filename='update_post.js') }}" defer></script>

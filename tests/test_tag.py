@@ -3,7 +3,6 @@ from myblog.db import get_db
 import json
 
 def test_add_tags(client, auth, app):
-    '''Tests adding tags to the database when creating posts'''
     auth.login()
 
     client.post('/create', data={'title': 'created', 'body': '', 'tags': 'tag1 tag2'})
@@ -21,10 +20,9 @@ def test_add_tags(client, auth, app):
 
 
 def test_update_tags(client, auth, app):
-    '''Tests updating tags on a post'''
     auth.login()
     client.post('/create', data={'title': 'created', 'body': '', 'tags': 'tag1s tag2'})
-    client.post('/2/update', data={'title': 'updated', 'body': '', 'tags': 'tag4 tag3'})
+    client.patch('/post/2', data={'title': 'updated', 'body': '', 'tags': 'tag4 tag3'})
 
     with app.app_context():
         db = get_db()
@@ -38,7 +36,6 @@ def test_update_tags(client, auth, app):
         assert 'tag4' in data_post
 
 def test_get_all_tags(client, auth, app):
-    '''Tests getting all tags'''
     auth.login()
     client.post('/create', data={'title': 'created', 'body': '', 'tags': 'tag1s tag2'})
 
@@ -46,7 +43,6 @@ def test_get_all_tags(client, auth, app):
     assert b'tag2' in response.data
 
 def test_get_posts_with_tags(client, auth, app):
-    '''Tests getting all posts with given tags'''
     auth.login()
     client.post('/create', data={'title': 'created', 'body': '', 'tags': 'my-tag'})
 

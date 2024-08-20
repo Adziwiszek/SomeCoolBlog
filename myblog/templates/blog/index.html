@@ -30,7 +30,7 @@
           {% endfor %}
         </div>
         {% if g.user['id'] == post['author_id'] %}
-          <a class="action" href="{{ url_for('blog.update', id=post['id']) }}">Edit</a>
+          <a class="action" href="{{ url_for('blog.update_page', id=post['id']) }}">Edit</a>
         {% endif %}
         <div class="voting">
           <div class="upvote" id="upvote" data-post-id="{{ post['id'] }}">↑ {{ post['upvotes'] }}</div>
